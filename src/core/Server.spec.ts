@@ -1,48 +1,53 @@
 import { type Request, type Response } from '../types/Requests'
-import { describe, test, expect, afterAll } from 'vitest'
-import testRequest from '../../src/requests/testRequest.json'
-import testRequestArray from '../../src/requests/testRequestArray.json'
-// import { execSync } from 'child_process'
+import { describe, test, expect, beforeEach, afterEach, afterAll } from 'vitest'
+import testRequest from '../../src/test/requests/test/testRequest.json'
+import testRequestArray from '../../src/test/requests/test/testRequestArray.json'
 import request from 'supertest'
 import { Server } from './Server'
 import { RouterLoader } from './RouterLoader'
 
 describe('Server Integration tests', () => {
-  const BASE_URL = 'http://localhost:3030'
+  let server: Server
+  let routerLoader: RouterLoader
 
-  afterAll(() => {
-    // execSync('docker-compose down')
+  beforeEach(async () => {
+    server = new Server()
+    routerLoader = new RouterLoader(server)
+    void await routerLoader.loadRoutes('./src/test')
   })
 
-  test('check if server is importing and processing request mock file', async () => {
-    const request: Request = testRequest.request
-    const mockedResponse: Response = testRequest.response
-
-    const url: string = `${BASE_URL}${request.path}`
-    const response: any = await fetch(url, { method: request.method }).then(async (response) => await response.json())
-    expect(response).toStrictEqual(mockedResponse.data)
+  afterEach(() => {
+    server.stopServer()
   })
 
   test('check if server is importing and processing request mock file', async () => {
     const requestFromFile: Request = testRequest.request
     const mockedResponse: Response = testRequest.response
-    const server = new Server()
-    const loader = new RouterLoader(server)
-    void await loader.loadRoutes()
-
     const res = await request(server.ExpressServer).get(requestFromFile.path)
     expect(res.statusCode).toBe(mockedResponse.statusCode)
+    expect(res.body).toStrictEqual(mockedResponse.data)
   })
-  test('check if server is importing and processing request mock file when it`s have an array of requests', async () => {
-    const server = new Server()
-    const loader = new RouterLoader(server)
-    void await loader.loadRoutes()
 
+  test('check if server is importing and processing request mock file when it`s have an array of requests', async () => {
     for (const testRequest of testRequestArray) {
       const requestFromFile: Request = testRequest.request
       const mockedResponse: Response = testRequest.response
       const res = await request(server.ExpressServer).get(requestFromFile.path)
       expect(res.statusCode).toBe(mockedResponse.statusCode)
+      expect(res.body).toStrictEqual(mockedResponse.data)
     }
+  })
+
+  test('Test 404 default response when route is not found', async () => {
+    const res = await request(server.ExpressServer).get('/404')
+    expect(res.statusCode).toBe(404)
+    expect(res.body).toStrictEqual({ message: '404: Page not Found' })
+  })
+
+  test('Error by wrong method', async () => {
+    routerLoader = new RouterLoader(server)
+    const fileWithWrongMethod: string[] = ['./src/test/requestsWithError/testErrorUnsupportedMethod.json']
+    const loadedRoutes: boolean = await routerLoader.loadRoutes(undefined, fileWithWrongMethod)
+    expect(loadedRoutes).toBe(false)
   })
 })

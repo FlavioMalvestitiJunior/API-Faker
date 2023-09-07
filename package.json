@@ -4,11 +4,11 @@
   "description": "API to mock responses, according to requests",
   "main": "index.js",
   "scripts": {
-    "dev": "npx tsc-watch --onsuccess \"node dist/index.js\"",
+    "dev": "npx tsc-watch --onsuccess \"node dist/src/index.js\"",
     "build": "npx tsc",
     "test": "npx vitest run --coverage",
     "lint": "npx eslint .",
-    "start": "node ./dist/index.js"
+    "start": "node ./dist/src/index.js"
   },
   "repository": {
     "type": "git",

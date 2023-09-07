@@ -1,7 +1,7 @@
 import path from 'path'
 import { type Server } from './Server'
 import { readdirSync } from 'fs'
-import { type RequestFile } from '../types/Requests'
+import { type RequestFileModule, type RequestFile } from '../types/Requests'
 
 export class RouterLoader {
   private readonly server: Server
@@ -10,13 +10,13 @@ export class RouterLoader {
     this.server = server
   }
 
-  private cliRootDir (): string {
-    const file = require.main ?? { filename: `${process.cwd()}/dist/index.js` }
-    const root: string = path.dirname(file.filename)
+  private requestRootDir (rootDir?: string): string {
+    const file = require.main ?? { filename: `${process.cwd()}/src/index.ts` }
+    const root: string = rootDir ?? path.dirname(file.filename)
     return root
   }
 
-  private getRequestsMock (path: string): string[] {
+  public getRequestsMock (path: string): string[] {
     const entries = readdirSync(path, { withFileTypes: true })
 
     const mocks: string[] = entries.reduce((mocks: string[], entry) => {
@@ -37,20 +37,27 @@ export class RouterLoader {
     return mocks
   }
 
-  public async loadRoutes (): Promise<boolean> {
+  public async loadRoutes (rootDir?: string, filesToLoad?: string[]): Promise<boolean> {
     try {
-      const requestFilePath: string[] = this.getRequestsMock(`${this.cliRootDir()}/requests`)
+      const requestFilePath: string[] = this.getRequestsMock(`${this.requestRootDir(rootDir)}/requests`)
+      const routeFiles: string[] = filesToLoad ?? requestFilePath
+      const requestsFromFile: Array<Promise<RequestFile>> = []
 
-      const requests: Array<Promise<RequestFile>> = requestFilePath.map(async (path: string) => {
-        const request: RequestFile = await import(path)
-        void await this.server.addRoute(request)
-        console.log('adding Route: ', request.request.path)
-        return request
-      })
+      for (const path of routeFiles) {
+        const mockedRequestFile: RequestFileModule = await import(path)
+        const mockedRequest: RequestFile | RequestFile[] = mockedRequestFile.default
+        const requests: RequestFile[] = Array.isArray(mockedRequest) ? mockedRequest : [mockedRequest]
 
-      await Promise.all(requests).then(() => {
-        this.server.startServer()
-      }).then(() => { this.server.addPageNotFound() })
+        for (const request of requests) {
+          void await this.server.addRoute(request)
+          console.log('adding Route: ', request.request.path)
+          requestsFromFile.push(Promise.resolve(request))
+        }
+      }
+
+      this.server.startServer()
+      this.server.addPageNotFound()
+
       return true
     } catch (error) {
       console.log(error)
