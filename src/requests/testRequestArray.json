@@ -1,0 +1,28 @@
+[
+  {
+    "plugin": "",
+    "request": {
+      "path": "/test/abc",
+      "method": "GET"
+    },
+    "response": {
+      "statusCode": 200,
+      "data": {
+        "message": "Im listening, everything is OK =]"
+      }
+    }
+  },
+  {
+    "plugin": "",
+    "request": {
+      "path": "/test/abc/def",
+      "method": "GET"
+    },
+    "response": {
+      "statusCode": 200,
+      "data": {
+        "message": "Im listening, everything is OK =]"
+      }
+    }
+  }
+]

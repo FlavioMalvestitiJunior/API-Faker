@@ -1,0 +1,17 @@
+export interface Request {
+  path: string
+  method: string | 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE' | 'CONNECT' | 'OPTIONS' | 'TRACE'
+}
+
+export interface Response {
+  statusCode: number
+  data: any
+}
+
+export interface RequestFile {
+  plugin: string
+  request: Request
+  response: Response
+}
+
+export type ResponseCallback = (expressRequest: any) => Promise<Response>
