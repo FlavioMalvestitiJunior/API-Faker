@@ -1,6 +1,7 @@
 import { type Request, type Response } from '../types/Requests'
-import { describe, test, expect, beforeEach, afterEach, afterAll } from 'vitest'
+import { describe, test, expect, beforeEach, afterEach } from 'vitest'
 import testRequest from '../../src/test/requests/test/testRequest.json'
+import testRequestWithParameter from '../../src/test/requests/test/testRequestWithParameter.json'
 import testRequestArray from '../../src/test/requests/test/testRequestArray.json'
 import request from 'supertest'
 import { Server } from './Server'
@@ -23,6 +24,14 @@ describe('Server Integration tests', () => {
   test('check if server is importing and processing request mock file', async () => {
     const requestFromFile: Request = testRequest.request
     const mockedResponse: Response = testRequest.response
+    const res = await request(server.ExpressServer).get(requestFromFile.path)
+    expect(res.statusCode).toBe(mockedResponse.statusCode)
+    expect(res.body).toStrictEqual(mockedResponse.data)
+  })
+
+  test('Check if requests with parameter are being rightly processed', async () => {
+    const requestFromFile: Request = testRequestWithParameter.request
+    const mockedResponse: Response = testRequestWithParameter.response
     const res = await request(server.ExpressServer).get(requestFromFile.path)
     expect(res.statusCode).toBe(mockedResponse.statusCode)
     expect(res.body).toStrictEqual(mockedResponse.data)

@@ -18,4 +18,9 @@ export interface RequestFileModule {
   default: RequestFile | RequestFile[]
 }
 
+export interface ProcessedRequest {
+  requestRoute: RequestFile
+  callback: ResponseCallback
+}
+
 export type ResponseCallback = (expressRequest: any) => Promise<Response>

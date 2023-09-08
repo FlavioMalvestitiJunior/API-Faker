@@ -14,7 +14,7 @@ describe('Router unit tests', () => {
   test('Request importer is able to navigate inside requests dir and find files', async () => {
     const requestsPath: string = `${process.cwd()}/src/test/requests`
     const files: string[] = routerLoader.getRequestsMock(requestsPath)
-    const expectedFiles: string[] = ['healthCheck.json', 'testRequest.json', 'testRequestArray.json']
+    const expectedFiles: string[] = ['healthCheck.json', 'testRequest.json', 'testRequestArray.json', 'testRequestWithParameter.json']
 
     for (const file of files) {
       const expectedFile: string = expectedFiles.find((expf) => file.endsWith(expf)) ?? 'notFound'

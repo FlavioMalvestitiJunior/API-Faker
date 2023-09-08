@@ -1,6 +1,6 @@
 import express from 'express'
 import { type Express } from 'express-serve-static-core'
-import { type RequestFile, type Request, type Response, type ResponseCallback } from '../types/Requests'
+import { type RequestFile, type Request, type Response, type ResponseCallback, type ProcessedRequest } from '../types/Requests'
 import type * as http from 'http'
 
 export class Server {
@@ -8,11 +8,13 @@ export class Server {
   private readonly supportedMethods: string[] = ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'CONNECT', 'OPTIONS', 'TRACE']
   private readonly port: number
   private readonly host: string
+  private readonly routes: any = {}
   public server: http.Server | undefined
 
   constructor (port: number = 3030, host: string = '0.0.0.0') {
     this.port = port
     this.host = host
+    this.app.use((req, res, next) => { this.mountResponse(req, res, next) })
   }
 
   public get ExpressServer (): http.Server | undefined {
@@ -36,13 +38,17 @@ export class Server {
     })
   }
 
-  private mountResponse (mockedResponse: Response, callback: ResponseCallback): any {
-    return async (request: any, response: any) => {
-      const callbackResponse: Response = await callback(request)
-      const finalResponse: Response = callbackResponse || mockedResponse
+  private mountResponse (req: any, res: any, next: any): void {
+    const route = this.routes[req.originalUrl] ?? {}
+    const mock: ProcessedRequest = route[req.method]
 
-      response.status(finalResponse.statusCode).send(finalResponse.data)
+    if (!mock) {
+      next()
     }
+
+    void mock.callback(req).then((response: Response) => {
+      res.status(response.statusCode).send(response.data)
+    })
   }
 
   public async addRoute (route: RequestFile, callback?: ResponseCallback): Promise<boolean> {
@@ -53,9 +59,15 @@ export class Server {
     if (!method) {
       throw new Error(`Unsupported method: ${request.method} on Route: ${request.path}`)
     }
-    const expressMethod: string = request.method.toLowerCase()
+    const requestRoute: ProcessedRequest = {
+      callback: finalCallback,
+      requestRoute: route
+    }
 
-    this.app[expressMethod as keyof typeof this.app](request.path, this.mountResponse(route.response, finalCallback))
+    const mockedMethods: any = this.routes[request.path] ?? {}
+    mockedMethods[request.method] = requestRoute
+
+    this.routes[request.path] = mockedMethods
     return true
   }
 }
