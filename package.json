@@ -1,6 +1,6 @@
 {
   "name": "api-faker",
-  "version": "0.0.1",
+  "version": "1.0.0",
   "description": "API to mock responses, according to requests",
   "main": "index.js",
   "scripts": {
