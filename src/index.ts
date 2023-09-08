@@ -7,5 +7,6 @@ const host: string | undefined = process.env.FAKER_HOST !== undefined ? '0.0.0.0
 
 const server: Server = new Server(port, host)
 const loader = new RouterLoader(server)
+const requestsPath: string = process.env.REQUESTS_DIR ?? './src/requests'
 
-void loader.loadRoutes()
+void loader.loadRoutes(requestsPath)

@@ -6,17 +6,17 @@ import { type RequestFileModule, type RequestFile } from '../types/Requests'
 export class RouterLoader {
   private readonly server: Server
 
-  constructor (server: Server) {
+  constructor(server: Server) {
     this.server = server
   }
 
-  private requestRootDir (rootDir?: string): string {
+  private requestRootDir(rootDir?: string): string {
     const file = require.main ?? { filename: `${process.cwd()}/src/index.ts` }
-    const root: string = rootDir ?? path.dirname(file.filename)
+    const root: string = rootDir ?? `${path.dirname(file.filename)}/requests`
     return root
   }
 
-  public getRequestsMock (path: string): string[] {
+  public getRequestsMock(path: string): string[] {
     const entries = readdirSync(path, { withFileTypes: true })
 
     const mocks: string[] = entries.reduce((mocks: string[], entry) => {
@@ -37,9 +37,9 @@ export class RouterLoader {
     return mocks
   }
 
-  public async loadRoutes (rootDir?: string, filesToLoad?: string[]): Promise<boolean> {
+  public async loadRoutes(rootDir?: string, filesToLoad?: string[]): Promise<boolean> {
     try {
-      const requestFilePath: string[] = this.getRequestsMock(`${this.requestRootDir(rootDir)}/requests`)
+      const requestFilePath: string[] = this.getRequestsMock(`${this.requestRootDir(rootDir)}`)
       const routeFiles: string[] = filesToLoad ?? requestFilePath
       const requestsFromFile: Array<Promise<RequestFile>> = []
 

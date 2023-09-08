@@ -14,7 +14,7 @@ describe('Server Integration tests', () => {
   beforeEach(async () => {
     server = new Server()
     routerLoader = new RouterLoader(server)
-    void await routerLoader.loadRoutes('./src/test')
+    void await routerLoader.loadRoutes('./src/test/requests')
   })
 
   afterEach(() => {

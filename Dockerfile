@@ -1,6 +1,7 @@
 FROM node:18-alpine
 
 COPY . /app
+ENV REQUESTS_DIR=/opt/requests
 
 WORKDIR /app
 RUN npm install
